@@ -308,7 +308,9 @@ export default function TasksPage({ view = "all" }) {
                   <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase">Task</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Category</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Project</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Assigned To</th>
+                  {!(view === "my" && currentUser?.role === "employee") && (
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Assigned To</th>
+                  )}
                   <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Priority</th>
                   <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
                   <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Est. Hrs</th>
@@ -338,16 +340,18 @@ export default function TasksPage({ view = "all" }) {
                       <td className="py-3 px-4 hidden sm:table-cell text-sm text-slate-500">
                         {project ? project.name : "—"}
                       </td>
-                      <td className="py-3 px-4 hidden md:table-cell text-sm text-slate-500">
-                        {assignee ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                              {assignee.name[0]}
+                      {!(view === "my" && currentUser?.role === "employee") && (
+                        <td className="py-3 px-4 hidden md:table-cell text-sm text-slate-500">
+                          {assignee ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                {assignee.name[0]}
+                              </div>
+                              <span>{assignee.name}</span>
                             </div>
-                            <span>{assignee.name}</span>
-                          </div>
-                        ) : "—"}
-                      </td>
+                          ) : "—"}
+                        </td>
+                      )}
                       <td className="py-3 px-4 text-center">
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${priorityConfig[task.priority]}`}>{task.priority}</span>
                       </td>

@@ -295,23 +295,39 @@ function WeeklyQueue({ timesheets, allUsers, projects, onApprove, onReject }) {
 }
 
 function DailyReview({ timesheets, allUsers, projects }) {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  // Use local date for default to match user expectation
+  const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [selectedTs, setSelectedTs] = useState(null);
   const [remarks, setRemarks] = useState("");
   const { approveTimesheet, rejectTimesheet } = useApp();
 
   const handleDateChange = (days) => {
     const d = new Date(selectedDate);
-    d.setDate(d.getDate() + days);
-    setSelectedDate(d.toISOString().split("T")[0]);
+    d.setDate(d.getDate() + days); // This handles month/year roll-overs correctly with local time object
+
+    // Convert back to YYYY-MM-DD
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
   };
 
   // Get all entries for the selected date from submitted timesheets
   const dailyEntries = timesheets
     .filter(t => t.status === "submitted")
     .flatMap(t => {
-      const start = new Date(t.weekStart + "T00:00:00");
-      const diffTime = new Date(selectedDate) - start;
+      // Robust date diffing using UTC to avoid DST issues
+      const start = new Date(t.weekStart + "T00:00:00Z");
+      const current = new Date(selectedDate + "T00:00:00Z");
+      const diffTime = current - start;
       const dayIdx = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
       if (dayIdx >= 0 && dayIdx <= 6) {
@@ -321,8 +337,8 @@ function DailyReview({ timesheets, allUsers, projects }) {
           .map(e => ({
             ...e,
             dayHours: e.hours[dayIdx],
-            dayNote: e.notes[dayIdx],
-            dayProgress: e.progress[dayIdx],
+            dayNote: e.notes[dayIdx] || "",
+            dayProgress: e.progress[dayIdx] || 0,
             timesheetId: t.id,
             userId: t.userId,
             weekStart: t.weekStart
@@ -385,7 +401,7 @@ function DailyReview({ timesheets, allUsers, projects }) {
         <CardHeader className="pb-2 border-b border-slate-50">
           <div className="flex justify-between items-center">
             <CardTitle className="text-base font-semibold text-slate-900">
-              Entries for {new Date(selectedDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              Entries for {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
             </CardTitle>
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
               {dailyEntries.length} entries found
@@ -485,7 +501,7 @@ function DailyReview({ timesheets, allUsers, projects }) {
                     <div>
                       <p>Review Timesheet: {emp?.name}</p>
                       <p className="text-sm font-normal text-slate-500">
-                        Week of {new Date(selectedTs.weekStart).toLocaleDateString()}
+                        Week of {new Date(selectedTs.weekStart + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
                   </DialogTitle>
@@ -535,7 +551,7 @@ function DailyReview({ timesheets, allUsers, projects }) {
                       Reject Entire Week
                     </Button>
                     <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                       onClick={handleApprove}
                     >
                       Approve Entire Week

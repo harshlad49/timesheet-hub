@@ -339,6 +339,7 @@ export default function TimesheetPage() {
                                       <span className={cn(t.status === "completed" && "line-through opacity-70")}>{t.name}</span>
                                     </SelectItem>
                                   ))}
+                                  <SelectItem value="other" className="text-slate-500 italic">Other</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -379,13 +380,6 @@ export default function TimesheetPage() {
                               />
                             </div>
 
-                            <Button
-                              variant="outline"
-                              className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 h-9 text-xs font-semibold uppercase tracking-wide"
-                              disabled={!isEditable}
-                            >
-                              Check In
-                            </Button>
 
                             {isEditable && (
                               <button
@@ -404,13 +398,24 @@ export default function TimesheetPage() {
                 })}
 
                 {isEditable && (
-                  <Button
-                    variant="outline"
-                    onClick={addRow}
-                    className="w-full py-6 border-dashed border-slate-300 text-slate-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group"
-                  >
-                    <Plus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" /> Add Task for {weekDates[selectedDayIndex].toLocaleDateString("en-US", { weekday: "short" })}
-                  </Button>
+                  <div className="space-y-4">
+                    <Button
+                      variant="outline"
+                      onClick={addRow}
+                      className="w-full py-6 border-dashed border-slate-300 text-slate-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all group"
+                    >
+                      <Plus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" /> Add Task for {weekDates[selectedDayIndex].toLocaleDateString("en-US", { weekday: "short" })}
+                    </Button>
+
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                      <Button variant="outline" onClick={handleSaveDraft} data-testid="daily-save-draft-btn">
+                        <Save className="w-4 h-4 mr-2" /> Save Draft
+                      </Button>
+                      <Button onClick={handleSubmit} className="bg-indigo-600 hover:bg-indigo-700" data-testid="daily-submit-btn">
+                        <Send className="w-4 h-4 mr-2" /> Submit Timesheet
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -455,22 +460,7 @@ export default function TimesheetPage() {
                 </CardContent>
               </Card>
 
-              {/* Live Check-Ins Card */}
-              <Card className="bg-white border border-slate-200 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border-2 border-indigo-600 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse"></div>
-                    </div>
-                    Live Check-Ins
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-6 text-slate-400 text-xs">
-                    No active check-ins for today.
-                  </div>
-                </CardContent>
-              </Card>
+
 
             </div>
           </div>
@@ -615,6 +605,7 @@ export default function TimesheetPage() {
                                   ) : (
                                     <div className="p-2 text-xs text-slate-400">No tasks found</div>
                                   )}
+                                  <SelectItem value="other" className="text-xs text-slate-500 italic">Other</SelectItem>
                                 </SelectContent>
                               </Select>
                               {(selectedTask) && (
@@ -646,6 +637,7 @@ export default function TimesheetPage() {
                                     {c.name}
                                   </SelectItem>
                                 ))}
+                                <SelectItem value="other" className="text-xs text-slate-500 italic">Other</SelectItem>
                               </SelectContent>
                             </Select>
                           </td>
