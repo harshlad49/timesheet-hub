@@ -6,7 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, XCircle, Clock, Eye, Filter } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { CheckCircle, XCircle, Clock, Eye, Filter, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -21,13 +23,20 @@ const statusConfig = {
 
 const taskNames = { t1: "Development", t2: "UI/UX Design", t3: "Testing & QA", t4: "Meetings", t5: "Documentation", t6: "Research", t7: "Code Review", t8: "Deployment" };
 
-export default function ApprovalPage() {
-  const { timesheets, allUsers, projects, approveTimesheet, rejectTimesheet, currentUser } = useApp();
+function getWeekDates(weekStart) {
+  const monday = new Date(weekStart + "T00:00:00");
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function WeeklyQueue({ timesheets, allUsers, projects, onApprove, onReject }) {
   const [filter, setFilter] = useState("submitted");
   const [selected, setSelected] = useState(null);
   const [remarks, setRemarks] = useState("");
 
-  // Show only non-draft timesheets for managers/admins
   const relevantTs = timesheets.filter((t) => t.status !== "draft");
   const filtered = filter === "all" ? relevantTs : relevantTs.filter((t) => t.status === filter);
 
@@ -40,7 +49,7 @@ export default function ApprovalPage() {
 
   const handleApprove = () => {
     if (!selected) return;
-    approveTimesheet(selected.id, remarks);
+    onApprove(selected.id, remarks);
     toast.success("Timesheet approved successfully!");
     setSelected(null);
     setRemarks("");
@@ -52,28 +61,14 @@ export default function ApprovalPage() {
       toast.error("Please add a rejection reason");
       return;
     }
-    rejectTimesheet(selected.id, remarks);
+    onReject(selected.id, remarks);
     toast.success("Timesheet rejected with remarks");
     setSelected(null);
     setRemarks("");
   };
 
-  const getWeekDates = (weekStart) => {
-    const monday = new Date(weekStart + "T00:00:00");
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return d;
-    });
-  };
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>Approval Queue</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Review and approve employee timesheets.</p>
-      </div>
-
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -258,7 +253,7 @@ export default function ApprovalPage() {
                 )}
 
                 {/* Actions for submitted timesheets */}
-                {selected.status === "submitted" && (currentUser?.role === "manager" || currentUser?.role === "admin") && (
+                {selected.status === "submitted" && (
                   <div className="mt-4 space-y-3">
                     <div>
                       <label className="text-sm font-medium text-slate-700">Remarks (required for rejection)</label>
@@ -295,6 +290,301 @@ export default function ApprovalPage() {
           })()}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DailyReview({ timesheets, allUsers, projects }) {
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedTs, setSelectedTs] = useState(null);
+  const [remarks, setRemarks] = useState("");
+  const { approveTimesheet, rejectTimesheet } = useApp();
+
+  const handleDateChange = (days) => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + days);
+    setSelectedDate(d.toISOString().split("T")[0]);
+  };
+
+  // Get all entries for the selected date from submitted timesheets
+  const dailyEntries = timesheets
+    .filter(t => t.status === "submitted")
+    .flatMap(t => {
+      const start = new Date(t.weekStart + "T00:00:00");
+      const diffTime = new Date(selectedDate) - start;
+      const dayIdx = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (dayIdx >= 0 && dayIdx <= 6) {
+        // Return entries for this day if they have hours
+        return t.entries
+          .filter(e => e.hours[dayIdx] > 0)
+          .map(e => ({
+            ...e,
+            dayHours: e.hours[dayIdx],
+            dayNote: e.notes[dayIdx],
+            dayProgress: e.progress[dayIdx],
+            timesheetId: t.id,
+            userId: t.userId,
+            weekStart: t.weekStart
+          }));
+      }
+      return [];
+    });
+
+  const handleApprove = () => {
+    if (!selectedTs) return;
+    approveTimesheet(selectedTs.id, remarks);
+    toast.success("Timesheet approved successfully!");
+    setSelectedTs(null);
+    setRemarks("");
+  };
+
+  const handleReject = () => {
+    if (!selectedTs) return;
+    if (!remarks.trim()) {
+      toast.error("Please add a rejection reason");
+      return;
+    }
+    rejectTimesheet(selectedTs.id, remarks);
+    toast.success("Timesheet rejected with remarks");
+    setSelectedTs(null);
+    setRemarks("");
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Date Navigator */}
+      <Card className="bg-white border border-slate-200 shadow-none">
+        <CardContent className="p-4 flex items-center justify-between">
+          <button
+            onClick={() => handleDateChange(-1)}
+            className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" /> Previous Day
+          </button>
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4 text-slate-400" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="font-bold text-slate-900 border-none bg-transparent focus:ring-0 p-0 cursor-pointer"
+            />
+          </div>
+          <button
+            onClick={() => handleDateChange(1)}
+            className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            Next Day <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
+        </CardContent>
+      </Card>
+
+      {/* Daily Entries Grid */}
+      <Card className="bg-white border border-slate-200 shadow-none">
+        <CardHeader className="pb-2 border-b border-slate-50">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base font-semibold text-slate-900">
+              Entries for {new Date(selectedDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </CardTitle>
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+              {dailyEntries.length} entries found
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {dailyEntries.length === 0 ? (
+            <div className="text-center py-16 text-slate-400">
+              <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">No pending entries for this date</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50/50 text-left">
+                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase w-48">Employee</th>
+                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase w-48">Project</th>
+                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase w-32">Task</th>
+                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Notes</th>
+                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase w-24">Hours</th>
+                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase w-24">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {dailyEntries.map((entry, idx) => {
+                    const user = allUsers.find(u => u.id === entry.userId);
+                    const project = projects.find(p => p.id === entry.projectId);
+                    return (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage src={user?.avatar} />
+                              <AvatarFallback className="bg-indigo-50 text-indigo-600 text-xs font-bold">{user?.name?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{user?.name}</p>
+                              <p className="text-xs text-slate-400">{user?.role}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="text-sm font-medium text-slate-900">{project?.name}</p>
+                          <p className="text-xs text-slate-500">{project?.client}</p>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-slate-600">
+                          {taskNames[entry.taskId] || "General"}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-slate-600 max-w-xs truncate" title={entry.dayNote}>
+                          {entry.dayNote || "—"}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="text-sm font-bold text-slate-900">{entry.dayHours}h</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              const ts = timesheets.find(t => t.id === entry.timesheetId);
+                              setSelectedTs(ts);
+                              setRemarks(ts?.remarks || "");
+                            }}
+                          >
+                            Review
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Review Modal Reuse for Daily View */}
+      <Dialog open={!!selectedTs} onOpenChange={(o) => { if (!o) { setSelectedTs(null); setRemarks(""); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedTs && (() => {
+            const emp = allUsers.find((u) => u.id === selectedTs.userId);
+            const weekDates = getWeekDates(selectedTs.weekStart);
+            const cfg = statusConfig[selectedTs.status];
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-3">
+                    <Avatar className="w-9 h-9">
+                      <AvatarImage src={emp?.avatar} />
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs font-bold">{emp?.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p>Review Timesheet: {emp?.name}</p>
+                      <p className="text-sm font-normal text-slate-500">
+                        Week of {new Date(selectedTs.weekStart).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </DialogTitle>
+                </DialogHeader>
+
+                {/* Simplified Grid showing mostly totals */}
+                <div className="mt-4 border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 border-b">
+                      <tr>
+                        <th className="py-2 px-3 text-left">Project</th>
+                        <th className="py-2 px-3 text-center">Logs</th>
+                        <th className="py-2 px-3 text-center">Total Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedTs.entries.map((e, i) => {
+                        const proj = projects.find(p => p.id === e.projectId);
+                        return (
+                          <tr key={i}>
+                            <td className="py-2 px-3 font-medium">{proj?.name}</td>
+                            <td className="py-2 px-3 text-center text-slate-500">{e.hours.filter(h => h > 0).length} days</td>
+                            <td className="py-2 px-3 text-center font-bold">{e.hours.reduce((a, b) => a + b, 0)}h</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Manager Remarks</label>
+                    <Textarea
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      placeholder="Add comments..."
+                      className="mt-1.5"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={handleReject}
+                    >
+                      Reject Entire Week
+                    </Button>
+                    <Button
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      onClick={handleApprove}
+                    >
+                      Approve Entire Week
+                    </Button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export default function ApprovalPage() {
+  const { timesheets, allUsers, projects, approveTimesheet, rejectTimesheet } = useApp();
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div>
+        <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>Approval Queue</h2>
+        <p className="text-slate-500 text-sm mt-0.5">Review and approve employee timesheets.</p>
+      </div>
+
+      <Tabs defaultValue="weekly" className="space-y-6">
+        <TabsList className="bg-slate-100 p-1 rounded-lg">
+          <TabsTrigger value="weekly" className="rounded-md px-4">Weekly Queue</TabsTrigger>
+          <TabsTrigger value="daily" className="rounded-md px-4">Daily Review</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="weekly">
+          <WeeklyQueue
+            timesheets={timesheets}
+            allUsers={allUsers}
+            projects={projects}
+            onApprove={approveTimesheet}
+            onReject={rejectTimesheet}
+          />
+        </TabsContent>
+
+        <TabsContent value="daily">
+          <DailyReview
+            timesheets={timesheets}
+            allUsers={allUsers}
+            projects={projects}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

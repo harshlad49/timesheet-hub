@@ -7,11 +7,14 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users, FolderKanban, Clock, CheckCircle, AlertTriangle,
-  TrendingUp, ArrowRight, Plus, XCircle
+  TrendingUp, ArrowRight, Plus, XCircle, MoreVertical
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar
 } from "recharts";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { monthlyData, employeeHoursData } from "@/data/mockData";
 
 const statusColors = {
@@ -122,21 +125,35 @@ function EmployeeDashboard({ user, timesheets, projects }) {
         <h3 className="text-lg font-semibold text-slate-900 mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>My Projects</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {myProjects.map((p) => (
-            <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200">
+            <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200 group">
               <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: p.color }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-slate-900 truncate">{p.name}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{p.client}</p>
-                    <div className="mt-2">
-                      <div className="flex justify-between text-xs text-slate-500 mb-1">
-                        <span>Budget used</span>
-                        <span>{Math.round((p.spent / p.budget) * 100)}%</span>
-                      </div>
-                      <Progress value={(p.spent / p.budget) * 100} className="h-1.5" />
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-slate-900 truncate">{p.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{p.client}</p>
                     </div>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-slate-400 hover:text-slate-900">
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate("/projects")}>
+                        View Details
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="mt-2">
+                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                    <span>Budget used</span>
+                    <span>{Math.round((p.spent / p.budget) * 100)}%</span>
+                  </div>
+                  <Progress value={(p.spent / p.budget) * 100} className="h-1.5" />
                 </div>
               </CardContent>
             </Card>
@@ -307,16 +324,29 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
         <h3 className="text-lg font-semibold text-slate-900 mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>Project Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((p) => (
-            <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200">
+            <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200 group">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
                     <p className="font-semibold text-sm text-slate-900">{p.name}</p>
                   </div>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ring-1 ring-inset inline-flex capitalize ${statusColors[p.status]}`}>
-                    {p.status.replace("-", " ")}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ring-1 ring-inset inline-flex capitalize ${statusColors[p.status]}`}>
+                      {p.status.replace("-", " ")}
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-slate-400 hover:text-slate-900">
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigate("/projects")}>View Details</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/projects")}>Edit Project</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-500 mb-3">{p.client}</p>
                 <div>
