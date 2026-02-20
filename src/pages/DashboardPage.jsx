@@ -271,17 +271,36 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
         {/* Monthly Trend */}
         <Card className="bg-white border border-slate-200 shadow-none" data-testid="monthly-trend-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-slate-900">Hours Trend (6 Months)</CardTitle>
+            <CardTitle className="text-base font-semibold text-slate-900">Project Hours Distribution (scaled to 40 max)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }} />
-                <Area type="monotone" dataKey="hours" stroke="#4F46E5" fill="#eef2ff" strokeWidth={2} />
-              </AreaChart>
+              <BarChart layout="vertical" data={projects} margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#f1f5f9" />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={100}
+                  tick={{ fontSize: 10, fill: "#64748b" }}
+                />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white p-3 border border-slate-200 shadow-lg rounded-lg">
+                          <p className="font-semibold text-slate-900 text-sm">{data.name}</p>
+                          <p className="text-indigo-600 font-bold text-xs">Total Employee Hours : 40</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="spent" name="Hours" fill="#4F46E5" radius={[0, 4, 4, 0]} barSize={20} />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>

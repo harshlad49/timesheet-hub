@@ -15,6 +15,7 @@ const navConfig = {
     { icon: FolderKanban, label: "Projects", path: "/projects" },
     { icon: CheckSquare, label: "Tasks", path: "/tasks" },
     { icon: ClipboardCheck, label: "Approvals", path: "/approvals" },
+    { icon: Clock, label: "Audit Logs", path: "/audit-logs" },
     { icon: BarChart2, label: "Reports", path: "/reports" },
   ],
   manager: [

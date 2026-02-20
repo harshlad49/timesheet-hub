@@ -10,6 +10,7 @@ import TimesheetPage from "@/pages/TimesheetPage";
 import ApprovalPage from "@/pages/ApprovalPage";
 import ReportsPage from "@/pages/ReportsPage";
 import UserManagementPage from "@/pages/UserManagementPage";
+import AuditLogsPage from "@/pages/AuditLogsPage";
 import TasksPage from "@/pages/TasksPage";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/approvals" element={<ApprovalPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/users" element={<UserManagementPage />} />
+            <Route path="/audit-logs" element={<AuditLogsPage />} />
           </Route>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />

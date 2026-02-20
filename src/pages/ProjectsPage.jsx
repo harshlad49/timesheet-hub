@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { taskCategories } from "@/data/mockData";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Plus, Calendar, Clock, Users, Search, Pencil, CheckCircle, Circle, AlertCircle, FolderKanban, FileText, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -340,7 +341,7 @@ export default function ProjectsPage() {
   // Staging state for new items
   const [stagedTasks, setStagedTasks] = useState([]);
   const [stagedFiles, setStagedFiles] = useState([]);
-  const [newTaskForm, setNewTaskForm] = useState({ name: "", assignedTo: "", priority: "medium" });
+  const [newTaskForm, setNewTaskForm] = useState({ name: "", assignedTo: "", priority: "medium", categoryId: "t1" });
 
   const canCreate = currentUser?.role === "admin" || currentUser?.role === "manager";
 
@@ -359,7 +360,7 @@ export default function ProjectsPage() {
   const handleAddTaskToForm = () => {
     if (!newTaskForm.name) return toast.error("Task name required");
     setStagedTasks([...stagedTasks, { ...newTaskForm, id: `temp_${Date.now()}` }]);
-    setNewTaskForm({ name: "", assignedTo: "", priority: "medium" });
+    setNewTaskForm({ name: "", assignedTo: "", priority: "medium", categoryId: "t1" });
   };
 
   const removeStagedTask = (idx) => {
@@ -393,7 +394,7 @@ export default function ProjectsPage() {
         status: "pending",
         priority: task.priority,
         dueDate: projectData.endDate,
-        categoryId: "cat_dev" // Default
+        categoryId: task.categoryId || "t1"
       });
     });
 
@@ -550,7 +551,7 @@ export default function ProjectsPage() {
                   <TabsContent value="tasks" className="space-y-4 mt-0">
                     <div className="space-y-3">
                       <div className="grid grid-cols-12 gap-2 items-end bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <div className="col-span-12 sm:col-span-6 space-y-1.5">
+                        <div className="col-span-12 sm:col-span-4 space-y-1.5">
                           <Label className="text-xs">Task Name</Label>
                           <Input
                             placeholder="New task name"
@@ -558,6 +559,25 @@ export default function ProjectsPage() {
                             value={newTaskForm.name}
                             onChange={(e) => setNewTaskForm({ ...newTaskForm, name: e.target.value })}
                           />
+                        </div>
+                        <div className="col-span-6 sm:col-span-3 space-y-1.5">
+                          <Label className="text-xs">Category</Label>
+                          <Select
+                            value={newTaskForm.categoryId}
+                            onValueChange={(v) => setNewTaskForm({ ...newTaskForm, categoryId: v })}
+                          >
+                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
+                            <SelectContent>
+                              {taskCategories.map(c => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
+                                    {c.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="col-span-6 sm:col-span-3 space-y-1.5">
                           <Label className="text-xs">Assigned To</Label>
@@ -573,7 +593,7 @@ export default function ProjectsPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="col-span-6 sm:col-span-3">
+                        <div className="col-span-12 sm:col-span-2">
                           <Button size="sm" className="w-full h-8 bg-indigo-600 hover:bg-indigo-700" onClick={handleAddTaskToForm}>
                             <Plus className="w-3.5 h-3.5 mr-1" /> Add
                           </Button>
@@ -588,22 +608,25 @@ export default function ProjectsPage() {
                           </div>
                         ) : (
                           <div className="divide-y divide-slate-100">
-                            {stagedTasks.map((task, idx) => (
-                              <div key={idx} className="p-3 flex items-center justify-between hover:bg-slate-50">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                  <div>
-                                    <div className="text-sm font-medium text-slate-900">{task.name}</div>
-                                    <div className="text-xs text-slate-500">
-                                      {allUsers.find(u => u.id === task.assignedTo)?.name || "Unassigned"} • {task.priority}
+                            {stagedTasks.map((task, idx) => {
+                              const cat = taskCategories.find(c => c.id === task.categoryId);
+                              return (
+                                <div key={idx} className="p-3 flex items-center justify-between hover:bg-slate-50">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat?.color || "#cbd5e1" }}></div>
+                                    <div>
+                                      <div className="text-sm font-medium text-slate-900">{task.name}</div>
+                                      <div className="text-xs text-slate-500">
+                                        {cat?.name || "Uncategorized"} • {allUsers.find(u => u.id === task.assignedTo)?.name || "Unassigned"} • {task.priority}
+                                      </div>
                                     </div>
                                   </div>
+                                  <Button variant="ghost" size="sm" onClick={() => removeStagedTask(idx)} className="text-red-500 h-8 w-8 p-0">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
                                 </div>
-                                <Button variant="ghost" size="sm" onClick={() => removeStagedTask(idx)} className="text-red-500 h-8 w-8 p-0">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </ScrollArea>

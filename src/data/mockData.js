@@ -124,3 +124,28 @@ export const projectFiles = [
   { id: "f5", projectId: "p2", name: "API_Spec_Swagger.json", type: "code", size: "120 KB", uploadedBy: "u3", uploadedAt: "2025-02-10" },
   { id: "f6", projectId: "p3", name: "Legacy_DB_Schema.sql", type: "code", size: "45 KB", uploadedBy: "u2", uploadedAt: "2024-10-15" },
 ];
+
+export const auditLogs = [
+  { id: "log1", timestamp: "2025-02-17 14:30:22", user: "Alex Johnson", action: "USER_UPDATE", target: "user_id: 125", metadata: '{role: "Manager"}' },
+  { id: "log2", timestamp: "2025-02-17 14:28:10", user: "Sarah Chen", action: "TS_APPROVE", target: "ts_id: 899", metadata: '{status: "Approved"}' },
+  { id: "log3", timestamp: "2025-02-17 13:15:00", user: "System Worker", action: "DB_BACKUP", target: "daily_dump", metadata: '{size: "45MB"}' },
+  { id: "log4", timestamp: "2025-02-17 11:02:33", user: "Mike Williams", action: "TS_SUBMIT", target: "ts_id: 901", metadata: '{hours: 38.5}' },
+  { id: "log5", timestamp: "2025-02-16 09:45:21", user: "Sarah Chen", action: "PROJECT_UPDATE", target: "project: Beta", metadata: '{status: "In Progress"}' },
+  { id: "log6", timestamp: "2025-02-15 16:20:05", user: "Alex Johnson", action: "ROLE_CHANGE", target: "user_id: u4", metadata: '{new_role: "employee"}' },
+  { id: "log7", timestamp: "2025-02-15 10:30:00", user: "Mike Williams", action: "LOGIN", target: "system", metadata: '{ip: "192.168.1.10"}' },
+  { id: "log8", timestamp: "2025-02-14 18:00:00", user: "System Worker", action: "CRON_JOB", target: "cleanup", metadata: '{files_removed: 12}' },
+];
+
+export const teamContributionData = [
+  { name: "Mike", value: 21, color: "#4F46E5" },
+  { name: "Lisa", value: 22, color: "#D97706" },
+  { name: "Sarah", value: 20, color: "#059669" },
+  { name: "James", value: 17, color: "#0891B2" },
+  { name: "Emma", value: 19, color: "#7C3AED" },
+];
+
+export const projectEmployeeMatrix = [
+  { name: "Website Redesign", alex: 45, jamie: 30, taylor: 20, total: 95 },
+  { name: "Mobile App Dev", alex: 25, casey: 35, jordan: 10, total: 70 },
+  { name: "Dashboard UI", jamie: 40, taylor: 20, jordan: 0, total: 60 },
+];
