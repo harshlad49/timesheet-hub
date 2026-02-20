@@ -79,7 +79,7 @@ export default function ReportsPage() {
   }));
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -131,14 +131,14 @@ export default function ReportsPage() {
           <TabsTrigger value="utilization">Project Utilization</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="detail" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TabsContent value="detail" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Report Detail Configuration */}
             <Card className="bg-white border border-slate-200 shadow-none h-fit">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-slate-900">Report Detail</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 px-4 py-4">
                 <div className="space-y-3">
                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Report Type</label>
                   <div className="space-y-2">
@@ -268,15 +268,15 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="utilization" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="utilization" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Team Hours Contribution Chart */}
             <Card className="bg-white border border-slate-200 shadow-none">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-slate-900">Team Hours Contribution</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full relative">
+                <div className="h-[250px] w-full relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -318,7 +318,7 @@ export default function ReportsPage() {
                 <CardTitle className="text-lg font-bold text-slate-900">Project vs Employee Hours</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[350px] w-full">
+                <div className="h-[280px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       layout="vertical"

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export default function TasksPage({ view = "all" }) {
   const itemsPerPage = 6;
 
   // Reset page when filters change
-  useMemo(() => setCurrentPage(1), [view, selectedCategory]);
+  useEffect(() => setCurrentPage(1), [view, selectedCategory]);
 
   const handleAddCategory = () => {
     if (!catForm.name) { toast.error("Category name is required"); return; }
@@ -123,7 +123,7 @@ export default function TasksPage({ view = "all" }) {
   const paginatedTasks = filteredTasks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>
@@ -265,7 +265,7 @@ export default function TasksPage({ view = "all" }) {
 
       {/* Categories Grid */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Activity Categories</h3>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Activity Categories</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
           {categories.map((cat) => {
             const IconComp = ICON_MAP[cat.id] || BookOpen;
@@ -273,10 +273,10 @@ export default function TasksPage({ view = "all" }) {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(selectedCategory === cat.id ? "all" : cat.id)}
-                className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md text-left group ${selectedCategory === cat.id ? "border-slate-900 shadow-md" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                className={`p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md text-left group ${selectedCategory === cat.id ? "border-slate-900 shadow-md" : "border-slate-200 bg-white hover:border-slate-300"}`}
                 data-testid={`category-${cat.id}`}
               >
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 transition-transform group-hover:scale-110" style={{ backgroundColor: cat.color + "20" }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110" style={{ backgroundColor: cat.color + "20" }}>
                   <IconComp className="w-4 h-4" style={{ color: cat.color }} />
                 </div>
                 <p className="text-xs font-semibold text-slate-900 leading-tight">{cat.name}</p>
@@ -289,7 +289,7 @@ export default function TasksPage({ view = "all" }) {
 
       {/* Tasks Table */}
       <Card className="bg-white border border-slate-200 shadow-none">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold">
               {selectedCategory === "all" ? "All Tasks" : categories.find(c => c.id === selectedCategory)?.name || "Tasks"}
@@ -311,16 +311,16 @@ export default function TasksPage({ view = "all" }) {
               <table className="w-full" data-testid="tasks-table">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase">Task</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Category</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Project</th>
+                    <th className="text-left py-2 px-6 text-xs font-semibold text-slate-500 uppercase">Task</th>
+                    <th className="text-left py-2 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Category</th>
+                    <th className="text-left py-2 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Project</th>
                     {!(view === "my" && currentUser?.role === "employee") && (
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Assigned To</th>
+                      <th className="text-left py-2 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Assigned To</th>
                     )}
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Priority</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Est. Hrs</th>
-                    {view !== "my" && <th className="py-3 px-4 w-12"></th>}
+                    <th className="text-center py-2 px-4 text-xs font-semibold text-slate-500 uppercase">Priority</th>
+                    <th className="text-center py-2 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
+                    <th className="text-center py-2 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Est. Hrs</th>
+                    {view !== "my" && <th className="py-2 px-4 w-12"></th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -331,11 +331,11 @@ export default function TasksPage({ view = "all" }) {
 
                     return (
                       <tr key={task.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors" data-testid={`task-row-${task.id}`}>
-                        <td className="py-3 px-6 text-sm font-medium text-slate-900">
+                        <td className="py-2 px-6 text-sm font-medium text-slate-900">
                           {task.name}
                           {task.createdAt && <div className="text-[10px] text-slate-400 font-normal mt-0.5">Created {new Date(task.createdAt).toLocaleDateString()}</div>}
                         </td>
-                        <td className="py-3 px-4 hidden sm:table-cell">
+                        <td className="py-2 px-4 hidden sm:table-cell">
                           {cat && (
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ backgroundColor: cat.color + "15", color: cat.color }}>
                               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
@@ -343,11 +343,11 @@ export default function TasksPage({ view = "all" }) {
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 hidden sm:table-cell text-sm text-slate-500">
+                        <td className="py-2 px-4 hidden sm:table-cell text-sm text-slate-500">
                           {project ? project.name : "—"}
                         </td>
                         {!(view === "my" && currentUser?.role === "employee") && (
-                          <td className="py-3 px-4 hidden md:table-cell text-sm text-slate-500">
+                          <td className="py-2 px-4 hidden md:table-cell text-sm text-slate-500">
                             {assignee ? (
                               <div className="flex items-center gap-2">
                                 <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
@@ -358,10 +358,10 @@ export default function TasksPage({ view = "all" }) {
                             ) : "—"}
                           </td>
                         )}
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-2 px-4 text-center">
                           <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${priorityConfig[task.priority]}`}>{task.priority}</span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-2 px-4 text-center">
                           <Select value={task.status} onValueChange={(v) => handleStatusChange(task.id, v)}>
                             <SelectTrigger className={`h-7 text-xs font-medium capitalize border-0 shadow-none focus:ring-0 w-[110px] mx-auto ${statusConfig[task.status]}`}>
                               <SelectValue />
@@ -373,9 +373,9 @@ export default function TasksPage({ view = "all" }) {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="py-3 px-4 text-center text-sm text-slate-600 hidden md:table-cell">{task.estimate ? `${task.estimate}h` : "—"}</td>
+                        <td className="py-2 px-4 text-center text-sm text-slate-600 hidden md:table-cell">{task.estimate ? `${task.estimate}h` : "—"}</td>
                         {view !== "my" && (
-                          <td className="py-3 px-4 text-center">
+                          <td className="py-2 px-4 text-center">
                             <div className="flex items-center justify-center gap-1">
                               <button onClick={() => handleEditTask(task)} className="text-slate-300 hover:text-indigo-600 transition-colors p-1">
                                 <Pen className="w-3.5 h-3.5" />
