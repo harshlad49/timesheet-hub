@@ -577,11 +577,19 @@ export default function ApprovalPage() {
         <p className="text-slate-500 text-sm mt-0.5">Review and approve employee timesheets.</p>
       </div>
 
-      <Tabs defaultValue="weekly" className="space-y-6">
+      <Tabs defaultValue="daily" className="space-y-6">
         <TabsList className="bg-slate-100 p-1 rounded-lg">
-          <TabsTrigger value="weekly" className="rounded-md px-4">Weekly Queue</TabsTrigger>
           <TabsTrigger value="daily" className="rounded-md px-4">Daily Review</TabsTrigger>
+          <TabsTrigger value="weekly" className="rounded-md px-4">Weekly Queue</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="daily">
+          <DailyReview
+            timesheets={timesheets}
+            allUsers={allUsers}
+            projects={projects}
+          />
+        </TabsContent>
 
         <TabsContent value="weekly">
           <WeeklyQueue
@@ -590,14 +598,6 @@ export default function ApprovalPage() {
             projects={projects}
             onApprove={approveTimesheet}
             onReject={rejectTimesheet}
-          />
-        </TabsContent>
-
-        <TabsContent value="daily">
-          <DailyReview
-            timesheets={timesheets}
-            allUsers={allUsers}
-            projects={projects}
           />
         </TabsContent>
       </Tabs>

@@ -309,7 +309,7 @@ export default function TimesheetPage() {
                           {/* Main Inputs */}
                           <div className="flex-1 space-y-4">
                             {/* Project / Task Selector */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <Select
                                 value={entry.projectId}
                                 onValueChange={(v) => updateEntry(rowIdx, "projectId", v)}
@@ -337,6 +337,24 @@ export default function TimesheetPage() {
                                   {projectTasks.map((t) => (
                                     <SelectItem key={t.id} value={t.id}>
                                       <span className={cn(t.status === "completed" && "line-through opacity-70")}>{t.name}</span>
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value="other" className="text-slate-500 italic">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              <Select
+                                value={entry.categoryId}
+                                onValueChange={(v) => updateEntry(rowIdx, "categoryId", v)}
+                                disabled={!isEditable}
+                              >
+                                <SelectTrigger className="h-10 border-slate-200 bg-slate-50/50">
+                                  <SelectValue placeholder="Category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {taskCategories.map((c) => (
+                                    <SelectItem key={c.id} value={c.id}>
+                                      {c.name}
                                     </SelectItem>
                                   ))}
                                   <SelectItem value="other" className="text-slate-500 italic">Other</SelectItem>

@@ -20,6 +20,7 @@ export const projects = [
   { id: "p3", name: "Data Migration", client: "Enterprise Co.", status: "completed", startDate: "2024-10-01", endDate: "2025-01-31", budget: 30000, spent: 28500, memberIds: ["u2", "u4"], description: "Legacy data migration to cloud infrastructure", color: "#059669" },
   { id: "p4", name: "ERP Implementation", client: "Manufacturing Ltd.", status: "on-hold", startDate: "2025-03-01", endDate: "2025-12-31", budget: 200000, spent: 0, memberIds: ["u3", "u4", "u5"], description: "Full ERP system implementation and training", color: "#D97706" },
   { id: "p5", name: "API Integration", client: "FinTech Corp.", status: "active", startDate: "2025-02-10", endDate: "2025-05-10", budget: 45000, spent: 12000, memberIds: ["u2", "u3"], description: "Payment gateway and third-party API integrations", color: "#7C3AED" },
+  { id: "p_other", name: "Others", client: "Miscellaneous", status: "active", startDate: "2025-01-01", endDate: "2026-12-31", budget: 1000, spent: 0, memberIds: ["u1", "u2", "u3", "u4", "u5", "u6"], description: "General tasks and miscellaneous activities not specific to other projects.", color: "#94a3b8" },
 ];
 
 export const taskCategories = [
@@ -76,6 +77,27 @@ export const timesheets = [
     totalHours: 16, remarks: "",
     entries: [
       { projectId: "p1", taskId: "t1", hours: [8, 8, 0, 0, 0, 0, 0] },
+    ]
+  },
+  {
+    id: "ts7", userId: "u3", weekStart: "2026-02-16", status: "submitted",
+    submittedAt: "2026-02-19", remarks: "Please review my weekly logs.", totalHours: 24,
+    entries: [
+      { projectId: "p1", taskId: "t1", hours: [8, 0, 8, 0, 8, 0, 0], notes: ["Auth fix implementation", "", "PR review for login module", "", "Final testing pass"], progress: [100, 0, 50, 0, 20] }
+    ]
+  },
+  {
+    id: "ts8", userId: "u4", weekStart: "2026-02-16", status: "submitted",
+    submittedAt: "2026-02-18", remarks: "", totalHours: 16,
+    entries: [
+      { projectId: "p2", taskId: "t2", hours: [0, 8, 0, 8, 0, 0, 0], notes: ["", "UX Workshop with stakeholders", "", "Applying client feedback to mockups", ""], progress: [0, 80, 0, 90, 0] }
+    ]
+  },
+  {
+    id: "ts9", userId: "u2", weekStart: "2026-02-09", status: "submitted",
+    submittedAt: "2026-02-13", remarks: "Finalizing previous week.", totalHours: 8,
+    entries: [
+      { projectId: "p3", taskId: "t5", hours: [0, 8, 0, 0, 0, 0, 0], notes: ["", "Documentation for migration flow", "", "", ""], progress: [0, 100, 0, 0, 0] }
     ]
   },
 ];

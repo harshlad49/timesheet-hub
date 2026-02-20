@@ -401,7 +401,7 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
                   <span className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium ${u.role === "admin" ? "bg-slate-100 text-slate-700" : u.role === "manager" ? "bg-violet-100 text-violet-700" : "bg-indigo-100 text-indigo-700"}`}>
                     {u.role}
                   </span>
-                  {u.status === "inactive" && <XCircle className="w-3.5 h-3.5 text-red-400" />}
+                  
                 </div>
               </div>
             ))}
