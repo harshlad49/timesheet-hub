@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,11 +34,11 @@ const tsStatusColors = {
 function StatCard({ title, value, icon: Icon, color, sub, testId }) {
   return (
     <Card className="bg-white border border-slate-200 shadow-none hover:shadow-md hover:border-slate-300 transition-all duration-200" data-testid={testId}>
-      <CardContent className="p-6">
+      <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{title}</p>
-            <p className="text-3xl font-bold text-slate-900 mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>{value}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>{value}</p>
             {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
           </div>
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
@@ -53,6 +54,8 @@ function EmployeeDashboard({ user, timesheets, projects }) {
   const navigate = useNavigate();
   const myTimesheets = timesheets.filter((t) => t.userId === user.id);
   const myProjects = projects.filter((p) => p.memberIds.includes(user.id));
+  const displayedProjects = myProjects.slice(0, 3);
+
   const thisWeekTs = myTimesheets.find((t) => t.weekStart === "2025-02-17");
   const weekHours = thisWeekTs?.totalHours || 0;
   const submitted = myTimesheets.filter((t) => t.status === "submitted").length;
@@ -60,7 +63,7 @@ function EmployeeDashboard({ user, timesheets, projects }) {
   const rejected = myTimesheets.filter((t) => t.status === "rejected").length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-5 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>
           Good morning, {user.name.split(" ")[0]}!
@@ -122,9 +125,21 @@ function EmployeeDashboard({ user, timesheets, projects }) {
 
       {/* My Projects */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>My Projects</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>My Projects</h3>
+          {myProjects.length > 3 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/projects")}
+              className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+            >
+              Show More <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {myProjects.map((p) => (
+          {displayedProjects.map((p) => (
             <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200 group">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-3 mb-2">
@@ -171,7 +186,7 @@ function ManagerDashboard({ user, timesheets, projects, allUsers }) {
   const activeProjects = projects.filter((p) => p.status === "active").length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-5 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>
           Welcome, {user.name.split(" ")[0]}!
@@ -186,7 +201,9 @@ function ManagerDashboard({ user, timesheets, projects, allUsers }) {
         <StatCard title="Hours This Month" value="640" icon={Clock} color="bg-emerald-100 text-emerald-600" sub="Team total" testId="stat-team-hours" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Pending Approvals List */}
         <Card className="bg-white border border-slate-200 shadow-none" data-testid="pending-approvals-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -227,7 +244,7 @@ function ManagerDashboard({ user, timesheets, projects, allUsers }) {
             <CardTitle className="text-base font-semibold text-slate-900">Team Hours This Month</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={employeeHoursData} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} />
@@ -239,6 +256,60 @@ function ManagerDashboard({ user, timesheets, projects, allUsers }) {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Project Overview */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>Project Overview</h3>
+          {projects.length > 3 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/projects")}
+              className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+            >
+              Show More <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {projects.slice(0, 3).map((p) => (
+            <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200 group">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                    <p className="font-semibold text-sm text-slate-900">{p.name}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ring-1 ring-inset inline-flex capitalize ${statusColors[p.status]}`}>
+                      {p.status.replace("-", " ")}
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-slate-400 hover:text-slate-900">
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigate("/projects")}>View Details</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mb-3">{p.client}</p>
+                <div>
+                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                    <span>Budget: ${p.spent.toLocaleString()} / ${p.budget.toLocaleString()}</span>
+                    <span>{Math.round((p.spent / p.budget) * 100)}%</span>
+                  </div>
+                  <Progress value={(p.spent / p.budget) * 100} className="h-1.5" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -252,7 +323,7 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
   const totalHoursMonth = timesheets.reduce((sum, t) => sum + (t.totalHours || 0), 0);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-5 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>
           Admin Dashboard
@@ -267,14 +338,14 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
         <StatCard title="Hours Tracked" value={totalHoursMonth} icon={TrendingUp} color="bg-emerald-100 text-emerald-600" sub="This period" testId="stat-total-hours" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Monthly Trend */}
         <Card className="bg-white border border-slate-200 shadow-none" data-testid="monthly-trend-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-slate-900">Project Hours Distribution (scaled to 40 max)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart layout="vertical" data={projects} margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#f1f5f9" />
                 <XAxis type="number" hide />
@@ -340,9 +411,21 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
 
       {/* Project Status */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>Project Overview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((p) => (
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>Project Overview</h3>
+          {projects.length > 3 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/projects")}
+              className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+            >
+              Show More <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {projects.slice(0, 3).map((p) => (
             <Card key={p.id} className="bg-white border border-slate-200 shadow-none hover:shadow-md transition-all duration-200 group">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">

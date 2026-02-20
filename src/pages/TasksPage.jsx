@@ -41,6 +41,11 @@ export default function TasksPage({ view = "all" }) {
   const [catForm, setCatForm] = useState({ name: "", color: "#4F46E5" });
   const [taskForm, setTaskForm] = useState({ name: "", categoryId: "t1", priority: "medium", estimate: "", status: "pending", projectId: "", assignedTo: "" });
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // Reset page when filters change
+  useMemo(() => setCurrentPage(1), [view, selectedCategory]);
 
   const handleAddCategory = () => {
     if (!catForm.name) { toast.error("Category name is required"); return; }
@@ -50,6 +55,7 @@ export default function TasksPage({ view = "all" }) {
     setCatOpen(false);
     setCatForm({ name: "", color: "#4F46E5" });
   };
+  // ... (rest of the file remains same, just inserting state)
 
   const handleAddTask = () => {
     if (!taskForm.name) { toast.error("Task name is required"); return; }
@@ -97,10 +103,6 @@ export default function TasksPage({ view = "all" }) {
   };
 
   const handleDeleteTask = (taskId, categoryId) => {
-    // Ideally context should handle delete, but for now we can filter locally and setTasks?
-    // But `setTasks` expects full array.
-    // Let's implement `setTasks` update via context `setTasks` or add `deleteTask` to context.
-    // Since I exposed `setTasks`, I can use it.
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     setCategories((prev) => prev.map((c) => c.id === categoryId ? { ...c, count: Math.max(0, c.count - 1) } : c));
     toast.success("Task removed");
@@ -116,6 +118,9 @@ export default function TasksPage({ view = "all" }) {
     }
     return filtered;
   }, [tasks, view, currentUser, selectedCategory]);
+
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  const paginatedTasks = filteredTasks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -302,89 +307,123 @@ export default function TasksPage({ view = "all" }) {
               <p>No tasks in this category</p>
             </div>
           ) : (
-            <table className="w-full" data-testid="tasks-table">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase">Task</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Category</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Project</th>
-                  {!(view === "my" && currentUser?.role === "employee") && (
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Assigned To</th>
-                  )}
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Priority</th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Est. Hrs</th>
-                  {view !== "my" && <th className="py-3 px-4 w-12"></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTasks.map((task) => {
-                  const cat = categories.find((c) => c.id === task.categoryId);
-                  const project = projects.find((p) => p.id === task.projectId);
-                  const assignee = allUsers.find(u => u.id === task.assignedTo);
+            <>
+              <table className="w-full" data-testid="tasks-table">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase">Task</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Category</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Project</th>
+                    {!(view === "my" && currentUser?.role === "employee") && (
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Assigned To</th>
+                    )}
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Priority</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Est. Hrs</th>
+                    {view !== "my" && <th className="py-3 px-4 w-12"></th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedTasks.map((task) => {
+                    const cat = categories.find((c) => c.id === task.categoryId);
+                    const project = projects.find((p) => p.id === task.projectId);
+                    const assignee = allUsers.find(u => u.id === task.assignedTo);
 
-                  return (
-                    <tr key={task.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors" data-testid={`task-row-${task.id}`}>
-                      <td className="py-3 px-6 text-sm font-medium text-slate-900">
-                        {task.name}
-                        {task.createdAt && <div className="text-[10px] text-slate-400 font-normal mt-0.5">Created {new Date(task.createdAt).toLocaleDateString()}</div>}
-                      </td>
-                      <td className="py-3 px-4 hidden sm:table-cell">
-                        {cat && (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ backgroundColor: cat.color + "15", color: cat.color }}>
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                            {cat.name}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 hidden sm:table-cell text-sm text-slate-500">
-                        {project ? project.name : "—"}
-                      </td>
-                      {!(view === "my" && currentUser?.role === "employee") && (
-                        <td className="py-3 px-4 hidden md:table-cell text-sm text-slate-500">
-                          {assignee ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                                {assignee.name[0]}
+                    return (
+                      <tr key={task.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors" data-testid={`task-row-${task.id}`}>
+                        <td className="py-3 px-6 text-sm font-medium text-slate-900">
+                          {task.name}
+                          {task.createdAt && <div className="text-[10px] text-slate-400 font-normal mt-0.5">Created {new Date(task.createdAt).toLocaleDateString()}</div>}
+                        </td>
+                        <td className="py-3 px-4 hidden sm:table-cell">
+                          {cat && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{ backgroundColor: cat.color + "15", color: cat.color }}>
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                              {cat.name}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 hidden sm:table-cell text-sm text-slate-500">
+                          {project ? project.name : "—"}
+                        </td>
+                        {!(view === "my" && currentUser?.role === "employee") && (
+                          <td className="py-3 px-4 hidden md:table-cell text-sm text-slate-500">
+                            {assignee ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                  {assignee.name[0]}
+                                </div>
+                                <span>{assignee.name}</span>
                               </div>
-                              <span>{assignee.name}</span>
-                            </div>
-                          ) : "—"}
-                        </td>
-                      )}
-                      <td className="py-3 px-4 text-center">
-                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${priorityConfig[task.priority]}`}>{task.priority}</span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Select value={task.status} onValueChange={(v) => handleStatusChange(task.id, v)}>
-                          <SelectTrigger className={`h-7 text-xs font-medium capitalize border-0 shadow-none focus:ring-0 w-[110px] mx-auto ${statusConfig[task.status]}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in-progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="py-3 px-4 text-center text-sm text-slate-600 hidden md:table-cell">{task.estimate ? `${task.estimate}h` : "—"}</td>
-                      {view !== "my" && (
+                            ) : "—"}
+                          </td>
+                        )}
                         <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => handleEditTask(task)} className="text-slate-300 hover:text-indigo-600 transition-colors p-1">
-                              <Pen className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={() => handleDeleteTask(task.id, task.categoryId)} className="text-slate-300 hover:text-red-500 transition-colors p-1" data-testid={`delete-task-${task.id}`}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${priorityConfig[task.priority]}`}>{task.priority}</span>
                         </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <td className="py-3 px-4 text-center">
+                          <Select value={task.status} onValueChange={(v) => handleStatusChange(task.id, v)}>
+                            <SelectTrigger className={`h-7 text-xs font-medium capitalize border-0 shadow-none focus:ring-0 w-[110px] mx-auto ${statusConfig[task.status]}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="in-progress">In Progress</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-3 px-4 text-center text-sm text-slate-600 hidden md:table-cell">{task.estimate ? `${task.estimate}h` : "—"}</td>
+                        {view !== "my" && (
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button onClick={() => handleEditTask(task)} className="text-slate-300 hover:text-indigo-600 transition-colors p-1">
+                                <Pen className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => handleDeleteTask(task.id, task.categoryId)} className="text-slate-300 hover:text-red-500 transition-colors p-1" data-testid={`delete-task-${task.id}`}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
+                  <p className="text-xs text-slate-500">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredTasks.length)} of {filteredTasks.length} tasks
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 text-xs"
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center px-2">
+                      <span className="text-xs font-medium text-slate-700">Page {currentPage} of {totalPages}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="h-8 text-xs"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
