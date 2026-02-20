@@ -216,7 +216,7 @@ function ManagerDashboard({ user, timesheets, projects, allUsers }) {
             {pending.length === 0 ? (
               <p className="text-slate-500 text-sm py-4 text-center">All caught up!</p>
             ) : (
-              pending.map((ts) => {
+              pending.slice(0, 2).map((ts) => {
                 const emp = allUsers.find((u) => u.id === ts.userId);
                 return (
                   <div key={ts.id} className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-100">
@@ -401,7 +401,7 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
                   <span className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium ${u.role === "admin" ? "bg-slate-100 text-slate-700" : u.role === "manager" ? "bg-violet-100 text-violet-700" : "bg-indigo-100 text-indigo-700"}`}>
                     {u.role}
                   </span>
-                  
+
                 </div>
               </div>
             ))}

@@ -92,7 +92,7 @@ export default function LoginPage() {
         </div>
 
         <p className="relative text-slate-600 text-sm">
-          © 2025 TimePro. All rights reserved.
+          © 2026 TimePro. All rights reserved.
         </p>
       </div>
 

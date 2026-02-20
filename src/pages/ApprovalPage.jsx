@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const statusConfig = {
-  submitted: { label: "Pending Review", class: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20", icon: Clock },
+  submitted: { label: "Pending", class: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20", icon: Clock },
   approved: { label: "Approved", class: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20", icon: CheckCircle },
   rejected: { label: "Rejected", class: "bg-red-50 text-red-700 ring-1 ring-red-600/20", icon: XCircle },
   draft: { label: "Draft", class: "bg-slate-100 text-slate-600 ring-1 ring-slate-600/20", icon: Clock },
@@ -307,6 +307,7 @@ function DailyReview({ timesheets, allUsers, projects }) {
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [selectedTs, setSelectedTs] = useState(null);
   const [remarks, setRemarks] = useState("");
+  const [filter, setFilter] = useState("all");
   const { approveTimesheet, rejectTimesheet } = useApp();
 
   const handleDateChange = (days) => {
@@ -320,32 +321,41 @@ function DailyReview({ timesheets, allUsers, projects }) {
     setSelectedDate(`${year}-${month}-${day}`);
   };
 
-  // Get all entries for the selected date from submitted timesheets
-  const dailyEntries = timesheets
-    .filter(t => t.status === "submitted")
-    .flatMap(t => {
-      // Robust date diffing using UTC to avoid DST issues
-      const start = new Date(t.weekStart + "T00:00:00Z");
-      const current = new Date(selectedDate + "T00:00:00Z");
-      const diffTime = current - start;
-      const dayIdx = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Get all entries for the selected date
+  const relevantTs = timesheets.filter((t) => t.status !== "draft");
 
-      if (dayIdx >= 0 && dayIdx <= 6) {
-        // Return entries for this day if they have hours
-        return t.entries
-          .filter(e => e.hours[dayIdx] > 0)
-          .map(e => ({
-            ...e,
-            dayHours: e.hours[dayIdx],
-            dayNote: e.notes[dayIdx] || "",
-            dayProgress: e.progress[dayIdx] || 0,
-            timesheetId: t.id,
-            userId: t.userId,
-            weekStart: t.weekStart
-          }));
-      }
-      return [];
-    });
+  const getDayEntries = (tsList, date) => tsList.flatMap(t => {
+    // Robust date diffing using UTC to avoid DST issues
+    const start = new Date(t.weekStart + "T00:00:00Z");
+    const current = new Date(date + "T00:00:00Z");
+    const diffTime = current - start;
+    const dayIdx = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (dayIdx >= 0 && dayIdx <= 6) {
+      // Return entries for this day if they have hours
+      return t.entries
+        .filter(e => e.hours[dayIdx] > 0)
+        .map(e => ({
+          ...e,
+          dayHours: e.hours[dayIdx],
+          dayNote: e.notes[dayIdx] || "",
+          dayProgress: e.progress[dayIdx] || 0,
+          timesheetId: t.id,
+          userId: t.userId,
+          weekStart: t.weekStart
+        }));
+    }
+    return [];
+  });
+
+  const dailyEntries = getDayEntries(filter === "all" ? relevantTs : relevantTs.filter(t => t.status === filter), selectedDate);
+
+  const counts = {
+    all: getDayEntries(relevantTs, selectedDate).length,
+    submitted: getDayEntries(relevantTs.filter(t => t.status === "submitted"), selectedDate).length,
+    approved: getDayEntries(relevantTs.filter(t => t.status === "approved"), selectedDate).length,
+    rejected: getDayEntries(relevantTs.filter(t => t.status === "rejected"), selectedDate).length,
+  };
 
   const handleApprove = () => {
     if (!selectedTs) return;
@@ -369,32 +379,58 @@ function DailyReview({ timesheets, allUsers, projects }) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Date Navigator */}
-      <Card className="bg-white border border-slate-200 shadow-none">
-        <CardContent className="p-4 flex items-center justify-between">
-          <button
-            onClick={() => handleDateChange(-1)}
-            className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" /> Previous Day
-          </button>
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="w-4 h-4 text-slate-400" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="font-bold text-slate-900 border-none bg-transparent focus:ring-0 p-0 cursor-pointer"
-            />
-          </div>
-          <button
-            onClick={() => handleDateChange(1)}
-            className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            Next Day <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
-        </CardContent>
-      </Card>
+      {/* Date Navigator & Stats Row */}
+      <div className="space-y-4">
+        <Card className="bg-white border border-slate-200 shadow-none">
+          <CardContent className="p-4 flex items-center justify-between">
+            <button
+              onClick={() => handleDateChange(-1)}
+              className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" /> Previous Day
+            </button>
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-slate-400" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="font-bold text-slate-900 border-none bg-transparent focus:ring-0 p-0 cursor-pointer"
+              />
+            </div>
+            <button
+              onClick={() => handleDateChange(1)}
+              className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              Next Day <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </CardContent>
+        </Card>
+
+        {/* Stats row to match Weekly Queue */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { key: "submitted", label: "Pending", color: "bg-amber-100 text-amber-700", border: "border-amber-200" },
+            { key: "approved", label: "Approved", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" },
+            { key: "rejected", label: "Rejected", color: "bg-red-100 text-red-700", border: "border-red-200" },
+            { key: "all", label: "Total", color: "bg-slate-100 text-slate-700", border: "border-slate-200" },
+          ].map(({ key, label, color, border }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={cn(
+                "p-4 rounded-xl border-2 text-left transition-all hover:shadow-md",
+                filter === key ? border : "border-transparent bg-white border border-slate-200"
+              )}
+            >
+              <p className="text-xs text-slate-500 font-medium uppercase">{label}</p>
+              <p className={cn("text-2xl font-bold mt-1 rounded-lg px-2 py-0.5 inline-block", color)} style={{ fontFamily: "Manrope, sans-serif" }}>
+                {counts[key]}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Daily Entries Grid */}
       <Card className="bg-white border border-slate-200 shadow-none">
@@ -418,58 +454,72 @@ function DailyReview({ timesheets, allUsers, projects }) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50/50 text-left">
-                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase w-48">Employee</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase w-48">Project</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase w-32">Task</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Notes</th>
-                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase w-24">Hours</th>
-                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase w-24">Action</th>
+                  <tr className="border-b border-slate-100 bg-slate-50/80">
+                    <th className="py-3 px-6 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Project & Client</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Activity</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Daily Notes</th>
+                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Hours</th>
+                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Status</th>
+                    <th className="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-100">
                   {dailyEntries.map((entry, idx) => {
                     const user = allUsers.find(u => u.id === entry.userId);
                     const project = projects.find(p => p.id === entry.projectId);
                     return (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4">
+                      <tr key={idx} className="hover:bg-slate-50/50 transition-all duration-200">
+                        <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8">
+                            <Avatar className="w-9 h-9 border border-slate-100 shadow-sm">
                               <AvatarImage src={user?.avatar} />
-                              <AvatarFallback className="bg-indigo-50 text-indigo-600 text-xs font-bold">{user?.name?.[0]}</AvatarFallback>
+                              <AvatarFallback className="bg-indigo-50 text-indigo-700 text-xs font-bold leading-none">{user?.name?.[0]}</AvatarFallback>
                             </Avatar>
-                            <div>
-                              <p className="text-sm font-medium text-slate-900">{user?.name}</p>
-                              <p className="text-xs text-slate-400">{user?.role}</p>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-slate-900 leading-tight">{user?.name}</span>
+                              <span className="text-[11px] text-slate-400 font-medium">{user?.role}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <p className="text-sm font-medium text-slate-900">{project?.name}</p>
-                          <p className="text-xs text-slate-500">{project?.client}</p>
+                        <td className="py-4 px-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-slate-800 leading-tight">{project?.name}</span>
+                            <span className="text-[11px] text-slate-500 font-medium">{project?.client}</span>
+                          </div>
                         </td>
-                        <td className="py-3 px-4 text-sm text-slate-600">
-                          {taskNames[entry.taskId] || "General"}
+                        <td className="py-4 px-4">
+                          <span className="text-sm font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md">
+                            {taskNames[entry.taskId] || "General"}
+                          </span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-slate-600 max-w-xs truncate" title={entry.dayNote}>
-                          {entry.dayNote || "—"}
+                        <td className="py-4 px-4 max-w-xs">
+                          <p className="text-sm text-slate-600 line-clamp-1 italic font-light truncate" title={entry.dayNote}>
+                            {entry.dayNote || "—"}
+                          </p>
                         </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="text-sm font-bold text-slate-900">{entry.dayHours}h</span>
+                        <td className="py-4 px-4 text-center">
+                          <span className="text-sm font-bold text-slate-900 bg-indigo-50/50 text-indigo-700 px-3 py-1 rounded-lg border border-indigo-100/50" style={{ fontFamily: "Manrope, sans-serif" }}>
+                            {entry.dayHours}h
+                          </span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-4 px-4 text-center">
+                          <span className={cn("inline-flex items-center gap-1.5 text-[10px] font-bold tracking-tight px-3 py-1 rounded-full uppercase border shadow-sm", statusConfig[timesheets.find(t => t.id === entry.timesheetId)?.status]?.class)}>
+                            {entry.dayHours > 0 ? (statusConfig[timesheets.find(t => t.id === entry.timesheetId)?.status]?.label || "—") : "—"}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-center">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-8 text-xs"
+                            className="h-9 px-4 text-xs font-semibold rounded-lg hover:bg-slate-100 hover:text-slate-900 border-slate-200 transition-all shadow-sm"
                             onClick={() => {
                               const ts = timesheets.find(t => t.id === entry.timesheetId);
                               setSelectedTs(ts);
                               setRemarks(ts?.remarks || "");
                             }}
                           >
-                            Review
+                            <Eye className="w-3.5 h-3.5 mr-1.5 text-slate-400" /> Review
                           </Button>
                         </td>
                       </tr>
@@ -533,30 +583,45 @@ function DailyReview({ timesheets, allUsers, projects }) {
                 </div>
 
                 <div className="mt-4 space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Manager Remarks</label>
-                    <Textarea
-                      value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)}
-                      placeholder="Add comments..."
-                      className="mt-1.5"
-                    />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500">Current status:</span>
+                    <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", cfg?.class)}>{cfg?.label}</span>
                   </div>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={handleReject}
-                    >
-                      Reject Entire Week
-                    </Button>
-                    <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                      onClick={handleApprove}
-                    >
-                      Approve Entire Week
-                    </Button>
-                  </div>
+
+                  {selectedTs.remarks && selectedTs.status !== "submitted" && (
+                    <div className={cn("p-3 rounded-lg text-sm", selectedTs.status === "rejected" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700")}>
+                      <strong>Remarks:</strong> {selectedTs.remarks}
+                    </div>
+                  )}
+
+                  {selectedTs.status === "submitted" && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-slate-700">Manager Remarks</label>
+                        <Textarea
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          placeholder="Add comments..."
+                          className="mt-1.5"
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                          onClick={handleReject}
+                        >
+                          Reject Entire Week
+                        </Button>
+                        <Button
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                          onClick={handleApprove}
+                        >
+                          Approve Entire Week
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             );

@@ -24,7 +24,15 @@ export default function UserManagementPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", role: "employee" });
+  const [form, setForm] = useState({ name: "", role: "employee" });
+
+  // Mock list of employees who are not yet users
+  const availableEmployees = [
+    { name: "John Doe", email: "john@timepro.com" },
+    { name: "Jane Smith", email: "jane@timepro.com" },
+    { name: "Robert Fox", email: "robert@timepro.com" },
+    { name: "Bessie Cooper", email: "bessie@timepro.com" },
+  ];
 
   const filtered = allUsers.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -43,31 +51,36 @@ export default function UserManagementPage() {
   };
 
   const handleAddUser = () => {
-    if (!form.firstName || !form.lastName || !form.email) {
-      toast.error("First Name, Last Name, and Email are required");
+    if (!form.name) {
+      toast.error("Please select an employee");
       return;
     }
-    const fullName = `${form.firstName} ${form.lastName}`;
 
     if (editingId) {
       const existingUser = allUsers.find(u => u.id === editingId);
-      updateUser({ ...existingUser, ...form, name: fullName });
-      toast.success(`${fullName} updated successfully!`);
+      updateUser({ ...existingUser, ...form });
+      toast.success(`${form.name} updated successfully!`);
     } else {
-      addUser({ ...form, name: fullName, avatar: null, joinDate: new Date().toISOString().split("T")[0], department: "N/A" });
-      toast.success(`${fullName} added successfully!`);
+      const emp = availableEmployees.find(e => e.name === form.name) || { email: `${form.name.toLowerCase().replace(" ", ".")}@timepro.com` };
+      addUser({
+        name: form.name,
+        email: emp.email,
+        role: form.role,
+        avatar: null,
+        joinDate: new Date().toISOString().split("T")[0],
+        department: "General",
+        status: "active"
+      });
+      toast.success(`${form.name} added successfully!`);
     }
     setOpen(false);
     setEditingId(null);
-    setForm({ firstName: "", lastName: "", email: "", role: "employee" });
+    setForm({ name: "", role: "employee" });
   };
 
   const handleEdit = (user) => {
-    const [firstName, ...lastNameParts] = user.name.split(" ");
     setForm({
-      firstName,
-      lastName: lastNameParts.join(" "),
-      email: user.email,
+      name: user.name,
       role: user.role,
     });
     setEditingId(user.id);
@@ -80,8 +93,6 @@ export default function UserManagementPage() {
       toast.success(`${user.name} removed successfully`);
     }
   };
-
-
 
   const handleToggleStatus = (user) => {
     const newStatus = user.status === "active" ? "inactive" : "active";
@@ -98,41 +109,71 @@ export default function UserManagementPage() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-slate-900 hover:bg-slate-800 active:scale-95 transition-all" data-testid="add-user-btn" onClick={() => { setEditingId(null); setForm({ firstName: "", lastName: "", email: "", role: "employee" }); }}>
+            <Button className="bg-slate-900 hover:bg-slate-800 active:scale-95 transition-all" data-testid="add-user-btn" onClick={() => { setEditingId(null); setForm({ name: "", role: "employee" }); }}>
               <Plus className="w-4 h-4 mr-2" /> Add User
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-sm">
-            <DialogHeader><DialogTitle>{editingId ? "Edit User" : "Add New User"}</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>First Name *</Label>
-                  <Input placeholder="John" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} data-testid="user-firstname-input" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Last Name *</Label>
-                  <Input placeholder="Doe" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} data-testid="user-lastname-input" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email *</Label>
-                <Input type="email" placeholder="john@company.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} data-testid="user-email-input" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Role</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                  <SelectTrigger data-testid="user-role-select"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+          <DialogContent className="max-w-[440px] p-8 rounded-2xl border-none shadow-2xl">
+            <DialogHeader className="pb-4">
+              <DialogTitle className="text-xl font-bold text-slate-900" style={{ fontFamily: "Manrope, sans-serif" }}>
+                {editingId ? "Edit User" : "Add New User"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-700">Select Employee *</Label>
+                <Select value={form.name} onValueChange={(v) => setForm({ ...form, name: v })}>
+                  <SelectTrigger className="h-12 border-slate-200 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-slate-400 transition-all">
+                    <SelectValue placeholder="Choose an employee" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                    {availableEmployees.map(emp => (
+                      <SelectItem key={emp.name} value={emp.name} className="py-2.5 rounded-lg focus:bg-slate-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-slate-900">{emp.name}</span>
+                          <span className="text-xs text-slate-500">{emp.email}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {editingId && !availableEmployees.find(e => e.name === form.name) && (
+                      <SelectItem value={form.name} className="py-2.5 rounded-lg focus:bg-slate-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-slate-900">{form.name}</span>
+                          <span className="text-xs text-slate-500">{allUsers.find(u => u.name === form.name)?.email}</span>
+                        </div>
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-3 pt-1">
-                <Button variant="outline" className="flex-1" onClick={() => { setOpen(false); setEditingId(null); }}>Cancel</Button>
-                <Button className="flex-1 bg-slate-900 hover:bg-slate-800" onClick={handleAddUser} data-testid="add-user-submit-btn">
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-700">Role</Label>
+                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
+                  <SelectTrigger className="h-12 border-slate-200 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-slate-400 transition-all">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                    <SelectItem value="employee" className="py-2.5 rounded-lg focus:bg-slate-50">Employee</SelectItem>
+                    <SelectItem value="manager" className="py-2.5 rounded-lg focus:bg-slate-50">Manager</SelectItem>
+                    <SelectItem value="admin" className="py-2.5 rounded-lg focus:bg-slate-50">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-12 text-sm font-bold border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all"
+                  onClick={() => { setOpen(false); setEditingId(null); }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 h-12 text-sm font-bold bg-[#828691] hover:bg-[#717580] text-white rounded-xl shadow-lg shadow-slate-200 transition-all"
+                  onClick={handleAddUser}
+                  data-testid="add-user-submit-btn"
+                >
                   {editingId ? "Save Changes" : "Add User"}
                 </Button>
               </div>
