@@ -233,8 +233,8 @@ export default function UserManagementPage() {
                   <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase">User</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Email</th>
                   <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Role</th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden lg:table-cell">Joined</th>
+                  <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -249,21 +249,7 @@ export default function UserManagementPage() {
                             <AvatarFallback className="bg-indigo-100 text-indigo-700 text-sm font-bold">{user.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                              {user.name}
-                              <button
-                                onClick={() => handleEdit(user)}
-                                className="text-slate-400 hover:text-indigo-600 transition-colors"
-                              >
-                                <Edit2 className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() => handleRemoveUser(user)}
-                                className="text-slate-400 hover:text-red-600 transition-colors"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </p>
+                            <p className="text-sm font-semibold text-slate-900">{user.name}</p>
                           </div>
                         </div>
                       </td>
@@ -271,12 +257,27 @@ export default function UserManagementPage() {
                       <td className="py-3 px-4 text-center">
                         <span className={cn("text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize", roleCfg.class)}>{roleCfg.label}</span>
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={cn("text-xs font-semibold px-2.5 py-0.5 rounded-full", user.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500")}>
-                          {user.status}
-                        </span>
-                      </td>
                       <td className="py-3 px-4 text-sm text-slate-500 hidden lg:table-cell">{user.joinDate}</td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                            onClick={() => handleEdit(user)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleRemoveUser(user)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}

@@ -165,7 +165,7 @@ function EmployeeDashboard({ user, timesheets, projects }) {
                 </div>
                 <div className="mt-2">
                   <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Budget used</span>
+                    <span>Time spent</span>
                     <span>{Math.round((p.spent / p.budget) * 100)}%</span>
                   </div>
                   <Progress value={(p.spent / p.budget) * 100} className="h-1.5" />
@@ -301,7 +301,7 @@ function ManagerDashboard({ user, timesheets, projects, allUsers }) {
                 <p className="text-xs text-slate-500 mb-3">{p.client}</p>
                 <div>
                   <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Budget: ${p.spent.toLocaleString()} / ${p.budget.toLocaleString()}</span>
+                    <span>Time spent in h: {p.spent.toLocaleString()} / {p.budget.toLocaleString()}</span>
                     <span>{Math.round((p.spent / p.budget) * 100)}%</span>
                   </div>
                   <Progress value={(p.spent / p.budget) * 100} className="h-1.5" />
@@ -453,7 +453,7 @@ function AdminDashboard({ user, timesheets, projects, allUsers }) {
                 <p className="text-xs text-slate-500 mb-3">{p.client}</p>
                 <div>
                   <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Budget: ${p.spent.toLocaleString()} / ${p.budget.toLocaleString()}</span>
+                    <span>Time spent in h: {p.spent.toLocaleString()} / {p.budget.toLocaleString()}</span>
                     <span>{Math.round((p.spent / p.budget) * 100)}%</span>
                   </div>
                   <Progress value={(p.spent / p.budget) * 100} className="h-1.5" />

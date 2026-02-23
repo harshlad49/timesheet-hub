@@ -94,7 +94,7 @@ export default function AuditLogsPage() {
                     <div className="relative flex-1 w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <Input
-                            placeholder="Search by actor, action, target..."
+                            placeholder="Search by Users, action, target..."
                             className="pl-9 bg-white border-slate-200 h-11 focus-visible:ring-indigo-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -124,7 +124,7 @@ export default function AuditLogsPage() {
                             <thead>
                                 <tr className="border-b border-slate-100 bg-slate-50/50">
                                     <th className="py-4 px-6 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-[200px]">Timestamp</th>
-                                    <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-[200px]">Actor</th>
+                                    <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-[200px]">Users</th>
                                     <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-[150px]">Action</th>
                                     <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-[180px]">Target</th>
                                     <th className="py-4 px-6 text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Details / Metadata</th>

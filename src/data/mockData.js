@@ -100,6 +100,34 @@ export const timesheets = [
       { projectId: "p3", taskId: "t5", hours: [0, 8, 0, 0, 0, 0, 0], notes: ["", "Documentation for migration flow", "", "", ""], progress: [0, 100, 0, 0, 0] }
     ]
   },
+  {
+    id: "ts10", userId: "u3", weekStart: "2026-02-23", status: "submitted",
+    submittedAt: "2026-02-23", remarks: "", totalHours: 8,
+    entries: [
+      { projectId: "p1", taskId: "t1", hours: [8, 0, 0, 0, 0, 0, 0], notes: ["Implementing core login logic", "", "", "", "", "", ""], progress: [40, 0, 0, 0, 0, 0, 0] }
+    ]
+  },
+  {
+    id: "ts11", userId: "u4", weekStart: "2026-02-23", status: "submitted",
+    submittedAt: "2026-02-23", remarks: "", totalHours: 7,
+    entries: [
+      { projectId: "p2", taskId: "t2", hours: [7, 0, 0, 0, 0, 0, 0], notes: ["Mobile app wireframing phase 1", "", "", "", "", "", ""], progress: [25, 0, 0, 0, 0, 0, 0] }
+    ]
+  },
+  {
+    id: "ts12", userId: "u2", weekStart: "2026-02-23", status: "submitted",
+    submittedAt: "2026-02-23", remarks: "", totalHours: 4,
+    entries: [
+      { projectId: "p5", taskId: "t4", hours: [4, 0, 0, 0, 0, 0, 0], notes: ["Project sync meeting and roadmap review", "", "", "", "", "", ""], progress: [100, 0, 0, 0, 0, 0, 0] }
+    ]
+  },
+  {
+    id: "ts13", userId: "u5", weekStart: "2026-02-23", status: "submitted",
+    submittedAt: "2026-02-23", remarks: "Back from leave, catching up.", totalHours: 8,
+    entries: [
+      { projectId: "p_other", taskId: "t6", hours: [8, 0, 0, 0, 0, 0, 0], notes: ["Researching new marketing trends", "", "", "", "", "", ""], progress: [10, 0, 0, 0, 0, 0, 0] }
+    ]
+  },
 ];
 
 export const monthlyData = [
